@@ -7,6 +7,7 @@ const adminLogin = async (req,res)=>{
 
       const ADMINUSERNAME = req.body.adminusername;
       const ADMINPASSWORD = req.body.adminpassword;
+      console.log("first")
 
       
       if(adminUserName===ADMINUSERNAME && adminPassword===ADMINPASSWORD){

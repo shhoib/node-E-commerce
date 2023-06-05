@@ -2,7 +2,7 @@ const express = require("express");
 const user_route = express();
 
 const auth = require("../middlewares/tokenauth")
-
+   
 const userController = require("../controllers/userController");
 
 
