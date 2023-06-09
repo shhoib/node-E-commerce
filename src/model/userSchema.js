@@ -4,14 +4,22 @@ const userSchema = new mongoose.Schema({
     "username" :{
          type:String
     } ,
+    
     "email" :{
-         type:String
+         type:String,
+         required : true
     } ,
+
     "password" :{
-         type:String
-    } ,
-    "cart": [],
-    "wishlist" : [],
+         type:String,
+         required : true
+    } , 
+
+    "wishlist" : [{
+     type:mongoose.Schema.Types.ObjectId,
+     ref : "product"
+    }],
+
     "orders" : Array
 })
 

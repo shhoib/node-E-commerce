@@ -3,11 +3,15 @@ const user_route = express();
 
 const auth = require("../middlewares/tokenauth")
    
-const userController = require("../controllers/userController");
+const user = require("../controllers/userController");
 
 
-user_route.post("/users/register",userController.registerUser);
-
-user_route.post("/users/login",auth.tokenVerification,userController.loginUser)
+user_route.post("/users/register",user.registerUser);
+user_route.post("/users/login",user.loginUser);
+user_route.get("/users/products",user.getAllProducts);
+user_route.get("/users/products/:id",user.getProductByID)
+user_route.get("/users/products/category",user.getProductByCategory);
+user_route.post("/users/cart/:id",user.addToCart);
+user_route.get("/users/cart/:id",user.getUserCart);
 
 module.exports = user_route;

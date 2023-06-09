@@ -1,5 +1,7 @@
 const jwt = require("jsonwebtoken")
 
+const user = require("../model/userSchema")
+
 const adminLogin = async (req,res)=>{
     try{
       const adminUserName = process.env.ADMIN_USERNAME;
@@ -7,7 +9,6 @@ const adminLogin = async (req,res)=>{
 
       const ADMINUSERNAME = req.body.adminusername;
       const ADMINPASSWORD = req.body.adminpassword;
-      console.log("first")
 
       
       if(adminUserName===ADMINUSERNAME && adminPassword===ADMINPASSWORD){
@@ -22,4 +23,30 @@ const adminLogin = async (req,res)=>{
     }
 }
 
-module.exports = { adminLogin }
+  const getAllUsers = async(req,res)=>{
+    try{
+      const allUsers = await user.find();
+      res.json( allUsers)
+    }
+    catch(error){
+       res.status(500).json(error)
+    }
+  }
+
+  ///////////// get usersById///////////
+
+  const getUserById = async(req,res)=>{
+    try{
+      const id = req.params.id;
+      const ID = await user.findById(id)
+      res.json(ID)
+    }
+    catch(error){
+      res.json(error)
+    }
+  }
+
+  
+
+module.exports = { adminLogin , getAllUsers, getUserById
+                       }
