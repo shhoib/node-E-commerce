@@ -165,7 +165,65 @@ const getUserCart = async(req,res)=>{
 }
 
 
+////////addToWishlist//////
+const ToWishlist = async(req,res)=>{
+
+  const authHeader = req.headers.authorization;
+  const token = authHeader.split(" ")[1];
+  const decodedUserName = jwt.decode(token,"secretKey");
+  const user = await User.findOne({username: decodedUserName});
+  const productID = req.params.id;
+
+  try{
+   if(user){
+    const PRODUCT = await product.findOne({_id : productID});
+
+    if(PRODUCT){
+      const alreadyInCart = await user.wishlist.findIndex((item)=>
+        item.product==productID);
+
+      if(alreadyInCart>=0){
+        res.json({message : "product already in cart"})
+      }else{
+        const addToWishlist = await User.updateOne(
+          {_id : user._id},
+          {$push:{
+            wishlist :{
+              product : productID,
+              price : PRODUCT.price
+            }
+          }} )
+          // console.log(user);
+          res.json(user)
+        }
+       }else{
+        res.json({message : "no product found"})
+      }
+      }else{
+        res.json({message :"please login first"}) 
+       }
+     
+  }catch(error){
+    console.log(error)
+    res.json(error)
+  }
+}
+
+
+/////////////deleteFromWishlist////////
+const deleteFromWishlist = async(req,res)=>{
+  const authHeader = req.headers.authorization;
+  const token = authHeader.split(" ")[1];
+  const decodedUserName = jwt.decode(token,"secretKey");
+  const user = await User.findOne({username: decodedUserName});
+
+  try{
+    const productID = req.params.id; 
+    const deletedItem = await user.findByIdAndDele
+  }
+}
+
 module.exports = { registerUser , getAllProducts, addToCart,
                    loginUser ,getProductByID ,getProductByCategory,
-                   getUserCart
+                   getUserCart,ToWishlist
                   };

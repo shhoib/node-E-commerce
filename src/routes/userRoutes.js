@@ -13,5 +13,6 @@ user_route.get("/users/products/:id",user.getProductByID)
 user_route.get("/users/products/category",user.getProductByCategory);
 user_route.post("/users/cart/:id",user.addToCart);
 user_route.get("/users/cart/:id",user.getUserCart);
+user_route.post("/users/wishlist/:id",user.ToWishlist);
 
 module.exports = user_route;
