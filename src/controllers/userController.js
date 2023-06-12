@@ -216,14 +216,27 @@ const deleteFromWishlist = async(req,res)=>{
   const token = authHeader.split(" ")[1];
   const decodedUserName = jwt.decode(token,"secretKey");
   const user = await User.findOne({username: decodedUserName});
+  const productID = req.params.id; 
 
   try{
-    const productID = req.params.id; 
-    const deletedItem = await user.findByIdAndDele
+    const index =  user.wishlist.findIndex((item)=>
+      item.product==productID);
+
+      if(index>=0){
+        const deleteItem =  user.wishlist.splice(index,1);
+        await user.save();
+        res.json({message : "product deleted succesfully"})
+      }else{
+        res.json({messsage:"product not found"})
+      }
+
+  }catch(error){
+    console.log(error)
+    res.json(error)
   }
 }
-
+ 
 module.exports = { registerUser , getAllProducts, addToCart,
                    loginUser ,getProductByID ,getProductByCategory,
-                   getUserCart,ToWishlist
+                   getUserCart,ToWishlist,deleteFromWishlist
                   };
