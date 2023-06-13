@@ -24,7 +24,18 @@ const userSchema = new mongoose.Schema({
           type: Number
     }}],
 
-    "orders" : Array
-})
+
+    "orders": [{
+       "products": {
+           type: Number,
+           default: 0,
+         },
+       "totalAmount": {
+         type: Number,
+         default: 0,
+       },  
+     }],
+ });
+
 
 module.exports = mongoose.model('user',userSchema);

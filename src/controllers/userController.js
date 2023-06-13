@@ -2,6 +2,7 @@ const User = require("../model/userSchema");
 const jwt = require("jsonwebtoken");
 const product = require('../model/productSchema')
 const cart = require("../model/cartSchema")
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 
 
 ///////////registerUser//////////////
@@ -183,7 +184,7 @@ const ToWishlist = async(req,res)=>{
         item.product==productID);
 
       if(alreadyInCart>=0){
-        res.json({message : "product already in cart"})
+        res.json({message : "product already in wishlist"})
       }else{
         const addToWishlist = await User.updateOne(
           {_id : user._id},
@@ -235,8 +236,101 @@ const deleteFromWishlist = async(req,res)=>{
     res.json(error)
   }
 }
+
+
+//////////payment/////////
+
+const payment = async (req,res) =>{
+  const ID = req.params.id;
+  const { amount, currency, payment_method_types } = req.body;
+
+  try{
+    const userCart = await cart.findOne({userId : ID})
+   
+    if(!userCart||userCart.item.length<0){
+      res.send("your cart is empty")
+    }else{
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount,
+        currency,
+        payment_method_types
+      });  
+      res.status(200).json({ clientSecret: paymentIntent.client_secret });
+    }
+
+
+    const totalAmount =  userCart.item.reduce((accumulator,currentValue)=>{
+      return accumulator+ currentValue.price
+    },0); 
+
+    const noOfProducts = userCart.item.length;
+   
+    const orderDetails = await User.updateOne(
+      { _id : ID},
+      {$push:{
+        orders:{
+          products : noOfProducts,
+          totalAmount : totalAmount
+        }
+      }}
+    ) 
+    
+    
+
+  }catch(error){
+    console.log(error)
+    res.status(500).send(error)
+  }
+}
+
+
+/////////////orderdetails/////////
+
+// const orderdetails = async(req,res)=>{
+
+//   const ID = req.params.id;
+
+//   try{
+  
+//   }
+// }
  
+
+
 module.exports = { registerUser , getAllProducts, addToCart,
                    loginUser ,getProductByID ,getProductByCategory,
-                   getUserCart,ToWishlist,deleteFromWishlist
+                   getUserCart,ToWishlist,deleteFromWishlist,payment
+                   
                   };
+
+                  
+// async function createPayment(req, res) {
+//   const { amount, currency, payment_method_types } = req.body;
+
+//   try {
+    
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// }
+
+
+// async function processPayment(req, res) {
+//   const { amount, currency, source } = req.body;
+
+//   try {
+//     // Create a charge or payment intent
+//     const paymentIntent = await stripe.paymentIntents.create({
+//       amount,
+//       currency,
+//       payment_method: source,
+//       confirm: true,
+//     });
+
+//     // Payment successful
+//     res.status(200).json({ success: true, paymentIntent });
+//   } catch (error) {
+//     // Payment failed
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// }
