@@ -3,13 +3,16 @@ const jwt = require("jsonwebtoken");
 const product = require('../model/productSchema')
 const cart = require("../model/cartSchema")
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
+const bcrypt = require("bcrypt")
 
 
 ///////////registerUser//////////////
 
 const registerUser = async (req, res) => {
   try {
-    const { username } = req.body;
+    const  username = req.body.username;
+      const password  = req.body.password;
+      const email = req.body.email;
 
 
     const existingUser = await User.findOne({ username });
@@ -17,17 +20,20 @@ const registerUser = async (req, res) => {
     if (existingUser) {
       res.json({ message: "User already registered" });
     } else {
-      const user = new User(req.body);
+
+      const hashedPassword = await bcrypt.hash(password,10);
+
+      const user = new User({username:username,password:hashedPassword,email:email});
       await user.save();
 
-      res.json({ message: "User registered successfully", user, token });
+      res.json({ message: "User registered successfully", user });
     }
   } catch (error) {
-    console.log(error);
+    console.log(error); 
     res.status(500).json({ message: "Error registering new user" });
   }
 };
-//eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFhYSIsImlhdCI6MTY4NjE5MDkyMH0.9dvNxi5y5WBnweGi9-G0_LJ4PG8tZbrOTHjY5sHdAuo
+
 
 /////////////////loginUSer////////////////
 const loginUser = async (req,res)=>{
@@ -36,16 +42,22 @@ const loginUser = async (req,res)=>{
         const username = req.body.username;
         const token = jwt.sign( username , "secretKey"); 
 
-    //  console.log(password,username)
-        const usernameMatch = await User.findOne({password : password});
-        const passwordMatch = await User.findOne({username: username});
+        const user = await User.findOne({username});
+        console.log(user)
+        
+        const passwordMatch = await bcrypt.compare(password,user.password)
+        console.log(passwordMatch)
 
-        if(passwordMatch&& usernameMatch){
-          res.json({ message : "login successfull" ,token})
+        if(user){
+         if(username==user.username && passwordMatch){
+          res.status(200).json({message : "logged in succesfully",token})
+         }else{
+          res.json("username or password mismatch")
+         }
         }else{
-          res.status(500).json({message:"please enter valid username and password"})
-          console.log(error)
+          res.status(404).json("please register first")
         }
+
     }catch(error){
       console.log(error)
     }
@@ -284,22 +296,36 @@ const payment = async (req,res) =>{
 }
 
 
-/////////////orderdetails/////////
+//////////totalRevenue//////
 
-// const orderdetails = async(req,res)=>{
-
-//   const ID = req.params.id;
-
+// const totalRevenue = async(req,res)=>{
 //   try{
-  
+//     console.log("first")
+//    const result = await User.aggregate([
+//       {$project : {
+//         totalProduct : {$size : "$products"},
+//         totalAmount : {$sum : "$products.price"}
+//       }}
+//    ])
+//    console.log(result)
+//    res.json(result)
+//   }catch(error){
+//     console.log(error)
+//     res.json(error)
 //   }
 // }
+
+
+
+
+
  
 
 
 module.exports = { registerUser , getAllProducts, addToCart,
                    loginUser ,getProductByID ,getProductByCategory,
                    getUserCart,ToWishlist,deleteFromWishlist,payment
+                   
                    
                   };
 

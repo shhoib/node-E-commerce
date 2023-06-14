@@ -46,7 +46,50 @@ const adminLogin = async (req,res)=>{
     }
   }
 
+  const totalRevenue = async (req, res) => {
+    try {
+  
+      const aggregate = await user.aggregate([
+        { $unwind : '$orders' },
+        {$group : {
+          _id : null,
+          toTalRevenue : {$sum: '$orders.totalAmount'},
+          totalItemsSold : {$sum : {$sum : '$orders.products'}}
+        }}
+      ]);
+  
+      const toTalRevenue = aggregate[0].toTalRevenue;
+      const totalItemsSold = aggregate[0].totalItemsSold;
+  
+      console.log(toTalRevenue,totalItemsSold)
+      res.status(200).json({toTalRevenue,totalItemsSold});
+  
+    } catch (error) {
+      console.log(error);
+      res.status(500).json(error);
+    }
+  };
   
 
-module.exports = { adminLogin , getAllUsers, getUserById
+  ////////orderDetails/////
+  const orderDetails = async(req,res)=>{
+    try{
+      const orderDetail = await user.find({}, "orders");
+
+      const validOrderDetail = orderDetail.filter((item) => {
+        return item.orders && item.orders.length > 0;
+      });
+
+      if(validOrderDetail.length>0){
+        res.status(200).json(validOrderDetail)
+      }else{
+        res.staus(404).json("no orders")
+      }
+    }catch(error){
+      res.status(500).json(error)
+    }
+  }
+
+module.exports = { adminLogin , getAllUsers, getUserById,totalRevenue,
+                    orderDetails
                        }

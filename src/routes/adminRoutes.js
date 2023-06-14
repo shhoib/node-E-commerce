@@ -14,6 +14,8 @@ admin_routes.get("/admin/products/:id",auth.isAdmin,product.getProductByID)
 admin_routes.get("/admin/products/category/:category",auth.isAdmin,product.getProductByCategory)
 admin_routes.put("/admin/products/:id",auth.isAdmin,product.upadateProduct)
 admin_routes.delete("/admin/products/:id",auth.isAdmin,product.deleteProduct)
+admin_routes.get("/admin/revenue/stats",auth.isAdmin,adminController.totalRevenue)
+admin_routes.get("/admin/total/orders",auth.isAdmin,adminController.orderDetails)
 
 
 module.exports = admin_routes;
