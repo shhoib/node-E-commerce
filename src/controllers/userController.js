@@ -4,16 +4,21 @@ const product = require('../model/productSchema')
 const cart = require("../model/cartSchema")
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY)
 const bcrypt = require("bcrypt")
+const joiSchema = require("../middlewares/joiSchema")
 
 
 ///////////registerUser//////////////
 
 const registerUser = async (req, res) => {
 
-    const  username = req.body.username;
-      const password  = req.body.password;
-      const email = req.body.email;
+ 
 
+      const{error, value} = joiSchema.validate(req.body)
+      if(error){
+        return res.status(500).json( error)
+      }
+  
+      const {username,password,email} = value ;
 
     const existingUser = await User.findOne({ username });
 
@@ -25,7 +30,7 @@ const registerUser = async (req, res) => {
 
       const user = new User({username:username,password:hashedPassword,email:email});
       await user.save();
-
+ 
       res.json({ message: "User registered successfully", user });
     }
   
@@ -143,6 +148,7 @@ const getUserCart = async(req,res)=>{
 }
 
 
+
 ////////addToWishlist//////
 const ToWishlist = async(req,res)=>{
 
@@ -202,6 +208,7 @@ const deleteFromWishlist = async(req,res)=>{
 }
 
 
+
 //////////payment/////////
 
 const payment = async (req,res) =>{
@@ -244,9 +251,7 @@ const payment = async (req,res) =>{
 
 module.exports = { registerUser , getAllProducts, addToCart,
                    loginUser ,getProductByID ,getProductByCategory,
-                   getUserCart,ToWishlist,deleteFromWishlist,payment
-                   
-                   
+                   getUserCart,ToWishlist,deleteFromWishlist,payment  
                   };
 
                   
