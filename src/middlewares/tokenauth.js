@@ -5,7 +5,7 @@ const tokenVerification = async (req,res,next)=>{
     const token = authHeader && authHeader.split(" ")[1];
 
     if(token==null){
-        res.send(401)
+        res.send(401).json({status:"failure",error_message:"no token found"})
     }
         jwt.verify(token, "secretKey",(err,user)=>{
             if(err){

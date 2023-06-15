@@ -9,7 +9,7 @@ const bcrypt = require("bcrypt")
 ///////////registerUser//////////////
 
 const registerUser = async (req, res) => {
-  try {
+
     const  username = req.body.username;
       const password  = req.body.password;
       const email = req.body.email;
@@ -18,8 +18,8 @@ const registerUser = async (req, res) => {
     const existingUser = await User.findOne({ username });
 
     if (existingUser) {
-      res.json({ message: "User already registered" });
-    } else {
+      res.json({ status :"failure",message : "user already registered",error_message:"user already registered" });
+    } 
 
       const hashedPassword = await bcrypt.hash(password,10);
 
@@ -28,16 +28,13 @@ const registerUser = async (req, res) => {
 
       res.json({ message: "User registered successfully", user });
     }
-  } catch (error) {
-    console.log(error); 
-    res.status(500).json({ message: "Error registering new user" });
-  }
-};
+  
+
 
 
 /////////////////loginUSer////////////////
 const loginUser = async (req,res)=>{
-    try{  
+     
         const password = req.body.password;
         const username = req.body.username;
         const token = jwt.sign( username , "secretKey"); 
@@ -50,64 +47,46 @@ const loginUser = async (req,res)=>{
 
         if(user){
          if(username==user.username && passwordMatch){
-          res.status(200).json({message : "logged in succesfully",token})
-         }else{
-          res.json("username or password mismatch")
+          return res.status(200).json({message : "logged in succesfully",token})
          }
-        }else{
-          res.status(404).json("please register first")
+         return res.status(400).json({ status :"failure",message : "username or password mismatch",error_message:"username or password mismatch"})        
         }
-
-    }catch(error){
-      console.log(error)
-    }
+          
+        res.status(404).json("please register first")
+ 
 }
 
 /////////getAllProducts///////////
 const getAllProducts = async(req,res)=>{
-  try{
+  
     const allProduct = await product.find();
     res.status(200).json(allProduct)
-  }catch(error){
-    res.status(500).json(error)
-  }
 }
 
 //////////////getProductById///////////////////
 const getProductByID = async(req,res)=>{
-  try{
     const ID = req.params.id;
     const Product = await product.findById(ID);
 
     if(Product){
       res.status(200).json(Product)
     }else{
-      res.status(404).json({message:"invalid request"})
-    }}
-     catch(error){
-    res.status(500).json(error)
-  }
+      res.status(404).json({status :"failure",message : "invalid request",error_message:"invalid request"})
+    }  
 }
  
 ///////////////getProductByCategory/////////////
 const getProductByCategory = async(req,res)=>{
-  try{
     const Category = req.query.category;
     const categories = await product.find({category : Category})
     res.status(200).json(categories)
-    console.log("first")
-  }
-  catch(error){
-     res.status(500).json(error)
-     console.log("Second")
-  }
+ 
 }
 
 
 
 ///////////addProductTOCart///////////
 const addToCart = async(req,res)=>{
-  try{
     const authHeader = req.headers.authorization;
     const token = authHeader.split(" ")[1];
     const decodedUserName = jwt.decode(token,"secretKey");
@@ -115,10 +94,8 @@ const addToCart = async(req,res)=>{
     const productID = req.params.id;
 
     const PRODUCT = await product.findOne({ _id : productID});
-    // console.log(decodedUserName)
     
     const user = await User.findOne({username : decodedUserName});
-    // console.log(user)
 
 
     if(user){
@@ -127,10 +104,9 @@ const addToCart = async(req,res)=>{
       if(userCart){
         const userIndex = await userCart.item.findIndex((item)=>
         item.product == productID)
-        // console.log(userIndex)
   
         if(userIndex >=0){
-          res.json({message : "product already in cart",userCart})
+          res.json({status :"failure",message : "product already in cart",error_message:"product already in cart"})
         }else{
           const incrementCart = await cart.updateOne(
             {userId : user._id},
@@ -142,9 +118,8 @@ const addToCart = async(req,res)=>{
             }}
           )
           res.json({message : "product added succesfully"})
-          // console.log(incrementCart)
         }
-      }else{
+      }
           const createNew = await cart.create({
             username : user.username,
             userId : (user._id),
@@ -153,28 +128,18 @@ const addToCart = async(req,res)=>{
               price : PRODUCT.price,
             }]
           });
-        }
-    }else{
-      // res.json({message:"pplease login first"})
-      console.log("please login first")
     }
-}catch(error){ 
-  console.log(error)
-  res.status(500).json(error);
+      res.status(400).json({status :"failure",message : "please login first",error_message:"please login first"})
 }
-}
+
 
 
 /////////getUserCart//////////////
 const getUserCart = async(req,res)=>{
-  try{
     const userId = req.params.id;
     const user = await cart.findOne({userId : userId})
     const userCart = await user.item;
-    res.json(userCart)
-  }catch(error){
-    res.json(error)
-  }
+    res.status(200).json(userCart)
 }
 
 
@@ -187,7 +152,6 @@ const ToWishlist = async(req,res)=>{
   const user = await User.findOne({username: decodedUserName});
   const productID = req.params.id;
 
-  try{
    if(user){
     const PRODUCT = await product.findOne({_id : productID});
 
@@ -196,7 +160,7 @@ const ToWishlist = async(req,res)=>{
         item.product==productID);
 
       if(alreadyInCart>=0){
-        res.json({message : "product already in wishlist"})
+        res.status(400).json({status :"failure",message : "product already in wishlist",error_message:"product already in wishlist"})
       }else{
         const addToWishlist = await User.updateOne(
           {_id : user._id},
@@ -206,20 +170,14 @@ const ToWishlist = async(req,res)=>{
               price : PRODUCT.price
             }
           }} )
-          // console.log(user);
           res.json(user)
         }
        }else{
-        res.json({message : "no product found"})
+        res.json({status :"failure",message : "no product found",error_message:"no product found"})
       }
       }else{
-        res.json({message :"please login first"}) 
+        res.json({status :"failure",message : "please login first",error_message:"please login first"}) 
        }
-     
-  }catch(error){
-    console.log(error)
-    res.json(error)
-  }
 }
 
 
@@ -231,7 +189,6 @@ const deleteFromWishlist = async(req,res)=>{
   const user = await User.findOne({username: decodedUserName});
   const productID = req.params.id; 
 
-  try{
     const index =  user.wishlist.findIndex((item)=>
       item.product==productID);
 
@@ -240,13 +197,8 @@ const deleteFromWishlist = async(req,res)=>{
         await user.save();
         res.json({message : "product deleted succesfully"})
       }else{
-        res.json({messsage:"product not found"})
+        res.json({status :"failure",message : "no product found",error_message:"no product found"})
       }
-
-  }catch(error){
-    console.log(error)
-    res.json(error)
-  }
 }
 
 
@@ -256,11 +208,11 @@ const payment = async (req,res) =>{
   const ID = req.params.id;
   const { amount, currency, payment_method_types } = req.body;
 
-  try{
+
     const userCart = await cart.findOne({userId : ID})
    
     if(!userCart||userCart.item.length<0){
-      res.send("your cart is empty")
+      res.status(400).jso({status :"failure",message : "your cart is empty",error_message:"your cart is empty"})
     }else{
       const paymentIntent = await stripe.paymentIntents.create({
         amount,
@@ -268,7 +220,7 @@ const payment = async (req,res) =>{
         payment_method_types
       });  
       res.status(200).json({ clientSecret: paymentIntent.client_secret });
-    }
+    } 
 
 
     const totalAmount =  userCart.item.reduce((accumulator,currentValue)=>{
@@ -278,7 +230,7 @@ const payment = async (req,res) =>{
     const noOfProducts = userCart.item.length;
    
     const orderDetails = await User.updateOne(
-      { _id : ID},
+      { _id : ID}, 
       {$push:{
         orders:{
           products : noOfProducts,
@@ -286,39 +238,7 @@ const payment = async (req,res) =>{
         }
       }}
     ) 
-    
-    
-
-  }catch(error){
-    console.log(error)
-    res.status(500).send(error)
-  }
 }
-
-
-//////////totalRevenue//////
-
-// const totalRevenue = async(req,res)=>{
-//   try{
-//     console.log("first")
-//    const result = await User.aggregate([
-//       {$project : {
-//         totalProduct : {$size : "$products"},
-//         totalAmount : {$sum : "$products.price"}
-//       }}
-//    ])
-//    console.log(result)
-//    res.json(result)
-//   }catch(error){
-//     console.log(error)
-//     res.json(error)
-//   }
-// }
-
-
-
-
-
  
 
 
@@ -330,33 +250,3 @@ module.exports = { registerUser , getAllProducts, addToCart,
                   };
 
                   
-// async function createPayment(req, res) {
-//   const { amount, currency, payment_method_types } = req.body;
-
-//   try {
-    
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// }
-
-
-// async function processPayment(req, res) {
-//   const { amount, currency, source } = req.body;
-
-//   try {
-//     // Create a charge or payment intent
-//     const paymentIntent = await stripe.paymentIntents.create({
-//       amount,
-//       currency,
-//       payment_method: source,
-//       confirm: true,
-//     });
-
-//     // Payment successful
-//     res.status(200).json({ success: true, paymentIntent });
-//   } catch (error) {
-//     // Payment failed
-//     res.status(500).json({ success: false, error: error.message });
-//   }
-// }

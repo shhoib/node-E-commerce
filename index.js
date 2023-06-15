@@ -7,7 +7,7 @@
 mongoose.connect("mongodb://127.0.0.1:27017/nodeproject");
 const db = mongoose.connection;
 
-app.use(express.json());
+app.use(express.json()); //x
 
 const userRoute = require("./src/routes/userRoutes");
 app.use("/",userRoute);
