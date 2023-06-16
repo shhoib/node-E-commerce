@@ -214,10 +214,14 @@ const deleteFromWishlist = async(req,res)=>{
 const payment = async (req,res) =>{
   const ID = req.params.id;
   const { amount, currency, payment_method_types } = req.body;
-
+ 
 
     const userCart = await cart.findOne({userId : ID})
    
+    if (!amount || !currency || !payment_method_types) {
+      return res.status(400).json({ status: "failure", message: "Invalid request data" });
+    }
+
     if(!userCart||userCart.item.length<0){
       res.status(400).jso({status :"failure",message : "your cart is empty",error_message:"your cart is empty"})
     }else{
@@ -226,7 +230,7 @@ const payment = async (req,res) =>{
         currency,
         payment_method_types
       });  
-      res.status(200).json({ clientSecret: paymentIntent.client_secret });
+      res.status(200).json({ clientSecret: paymentIntent });
     } 
 
 
